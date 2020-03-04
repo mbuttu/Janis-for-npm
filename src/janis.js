@@ -11,7 +11,7 @@ var checkIfString = function(myVar) {
 }
 
 function janisBot(apikey, clientkey, config) {
-    var that = Object;
+    var that = {};
     that.apikey = apikey;
     that.clientkey = clientkey;
 
@@ -96,7 +96,7 @@ function janisBot(apikey, clientkey, config) {
 
     that.logUnknownIntent = function(message) {
         if (that.checkIfMessage(message) == false) {
-            return Promise.reject();
+            return Promise.reject(new Error('logUnknownIntent: not a message'));
         }
         var data = {
             method: 'POST',
@@ -125,7 +125,7 @@ function janisBot(apikey, clientkey, config) {
 
     that.assistanceRequested = function(message) {
         if (that.checkIfMessage(message) == false) {
-            return Promise.reject();
+            return Promise.reject(new Error('assistanceRequested: not a message'));
         }
         var data = {
             method: 'POST',
@@ -152,7 +152,7 @@ function janisBot(apikey, clientkey, config) {
 
     that.hopIn = function(message, reply, detectIntent) {
         if (that.checkIfMessage(message) == false) { 
-            return Promise.reject();
+            return Promise.reject(new Error('hopIn: not a message'));
         }
         if (dashbot) {
             var dashbotMsg = {text: message.text, userId: message.channel, "dashbot_timestamp": message.ts*1000}
@@ -208,7 +208,7 @@ function janisBot(apikey, clientkey, config) {
 
     that.hopOut = function(message) {
         if (that.checkIfMessage(message) == false) {
-            return Promise.reject();
+            return Promise.reject(new Error('hopOut: not a message'));
         }
         if (dashbot) {
             var msg = that.normalize(message)
@@ -517,7 +517,12 @@ function janisBotFacebook(janisbot) {
 
     // botkit middleware endpoints
     that.send = function(bot, message, next) {
-        that.hopOut(message);
+        that.hopOut(message)
+        .catch(function(err) {
+          if (that.debug) {
+            console.log('janisBotMicrosoft.send: error hopping out', err.stack);
+          }
+        });
         next();   
     };
 
@@ -542,7 +547,12 @@ function janisBotMicrosoft(janisbot) {
 
     // botkit middleware endpoints
     that.send = function(bot, message, next) {
-        that.hopOut(message);
+        that.hopOut(message)
+        .catch(function(err) {
+          if (that.debug) {
+            console.log('janisBotMicrosoft.send: error hopping out', err.stack);
+          }
+        });
         next();   
     };
 
@@ -563,7 +573,12 @@ function janisBotSlack(janisbot) {
         if (message.user == null) {
             message.user = bot.identity.id;
         }
-        that.hopOut(message);
+        that.hopOut(message)
+        .catch(function(err) {
+          if (that.debug) {
+            console.log('janisBotSlack.send: error hopping out', err.stack);
+          }
+        });
         next();
     };
 
